@@ -548,7 +548,8 @@ std::optional<bool> parse_openai_preserve_thinking(const Json& body) {
             bad_request("chat_template_kwargs must be an object", "chat_template_kwargs");
         }
         for (auto it = kwargs.begin(); it != kwargs.end(); ++it) {
-            if (it.key() != "preserve_thinking" && !it.value().is_null()) {
+            // Allow both "preserve_thinking" and "enable_thinking"
+            if (it.key() != "preserve_thinking" && it.key() != "enable_thinking" && !it.value().is_null()) {
                 bad_request("chat_template_kwargs." + it.key() + " is not supported",
                             "chat_template_kwargs", "chat_template_option_not_supported");
             }
@@ -559,6 +560,16 @@ std::optional<bool> parse_openai_preserve_thinking(const Json& body) {
                             "chat_template_kwargs");
             }
             template_value = kwargs.at("preserve_thinking").get<bool>();
+        }
+        if (kwargs.contains("enable_thinking") && !kwargs.at("enable_thinking").is_null()) {
+            if (!kwargs.at("enable_thinking").is_boolean()) {
+                bad_request("chat_template_kwargs.enable_thinking must be a boolean or null",
+                            "chat_template_kwargs");
+            }
+            // Accepted and validated for WebUI compatibility.
+            // Since thinking mode is currently global (--no-thinking),
+            // we consume the value here without crashing the request.
+            [[maybe_unused]] bool enable_thinking_val = kwargs.at("enable_thinking").get<bool>();
         }
     }
 
