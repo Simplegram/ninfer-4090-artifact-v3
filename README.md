@@ -1,3 +1,51 @@
+# NInfer-4090 Artifact-V3 Fork
+
+This repository is a fork of the original [ninfer-4090](https://github.com/UDPSendToFailed/ninfer-4090) repository by [UDPSendToFailed](https://github.com/UDPSendToFailed). It is co-developed with **Gemini 3.8 Flash** as advisor and the **Oh-My-Pi** coding harness, running **Qwen3.8-27B** deployed with the ninfer-4090 engine.
+
+## What this fork is
+
+The same single-GPU RTX 4090 (`sm_89`) Qwen3.8-27B inference engine as the original, extended with the **NInfer v3 artifact format** ported end to end (C++ reader/materializer + Python container tooling), the direct-I/O correctness fixes that came with it, and a few serving/converter adjustments. Everything in the original README below is unchanged unless noted here.
+
+## Branch model
+
+| Branch | Contents |
+|---|---|
+| `feat/rtx-4090-sm89-native` (default) | Identical to the upstream parent — the v1.2.0 engine baseline |
+| `feat/artifact-v3` | Baseline + the fork work listed below (7 commits ahead) |
+
+## What changed (vs the parent repo)
+
+1. **v3 artifact format, end to end** (`37598370`)
+   - C++ (`src/artifact/`): new `framing.h` (32-byte entry header: `NINFER\x00\x03` magic, u64 JSON length, 16-byte artifact ID; `NINPRT\x00\x03` continuation part files; 4096-byte payload alignment), a strict v3 JSON schema (`components`/`objects`/`bindings`/`uses`/`files`), a closed weight-format registry (upstream-only spellings such as `nvfp4` are recognized and rejected with target-specific errors), a reader rewritten for v3 entries plus N validated continuation part files (legacy v1/v2 reading preserved), and a direct-I/O materializer that scatters aligned read spans per file.
+   - Python (`tools/artifact/`): v3 writer/reader in `container.py` (v1/v2 legacy files stay readable), a fork-local `tools/upgrade_ninfer_v2_to_v3.py` reframe script, and removal of `migrate_v1_to_v2.py`.
+   - Tests: v3 fixtures with sidecar part files, reader continuation/rejection cases, and a sector-padded legacy fixture.
+2. **Direct-I/O correctness** (required before real multi-GB artifacts could load)
+   - `7cb55ae2` — full 64-bit `OVERLAPPED` offset encoding; the old clamp made the kernel reject every `ReadFile` at and beyond the 4 GiB mark (`ERROR_INVALID_PARAMETER`).
+   - `836e7e0b` — artifact payloads are sector-padded to the 4096-byte direct-I/O boundary by every writer (and the upgrade tool), and the reader enforces the alignment for v3 entries and parts.
+   - `f07d73b6` — duplicate checked-arithmetic helpers removed from `storage_layouts.cpp` (MSVC C2668 ambiguity).
+3. **Serving** — `8199c511`: `chat_template_kwargs` now accepts `enable_thinking` (validated as boolean/null and consumed, so WebUIs that send it no longer get a 400; thinking mode is still governed by the global `--no-thinking` switch).
+4. **Build** — `17752870`: `CMakeLists.txt` pins the FFMPEG/CURL import sets to a local vcpkg install (`C:/src/vcpkg`, x64-windows) instead of `find_package`, which fails to discover them on this machine.
+5. **Converter** — `4fcc74ce`: the official-resource SHA256 preflight in `tools/convert/qwen3_8_27b/convert.py` is commented out so sibling checkpoints (Swift-Qwen3.8-27B) whose frontend resources do not match the registered checksums can be converted.
+
+## Building (fork-specific notes)
+
+Identical to the standard instructions further down: Windows 11, Visual Studio 2022, CUDA 13.3, CMake + Ninja into `build-ninja/`. The FFMPEG/CURL `find_package` bypass is baked into `CMakeLists.txt` for a vcpkg root at `C:/src/vcpkg` — if your vcpkg root is elsewhere, edit that block (or restore `find_package` with a working vcpkg toolchain file).
+
+## Using (fork-specific notes)
+
+- **v3 artifacts**: generate one with the in-repo converter,
+  ```powershell
+  python tools/convert/qwen3_8_27b/convert.py --model "<checkpoint dir>" --out qwen3_8_27b.ninfer
+  ```
+  The writer emits the v3 entry header automatically. The on-disk payload is zero-padded to a 4096-byte sector boundary — do not hand-trim or truncate the file; `FILE_FLAG_NO_BUFFERING` direct reads reject a partial trailing sector.
+- **Existing v1/v2 artifacts**: `ninfer`/`ninfer-serve` still read them unchanged, or reframe them to v3,
+  ```powershell
+  python tools/upgrade_ninfer_v2_to_v3.py input-v2.ninfer output-v3.ninfer
+  ```
+- **Serving and CLI**: exactly as documented below (`ninfer-serve`, `ninfer`, `ninfer_bench`) — no command changed.
+
+---
+
 # NInfer-4090
 
 NInfer-4090 is a specialized, high-performance C++20/CUDA inference engine for **Qwen3.8-27B** on a single 24 GB **NVIDIA GeForce RTX 4090** (`sm_89`).
@@ -147,10 +195,11 @@ cmd /c "call ""C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC
 
 This is a fork of NInfer I am developing for fun to push the limits of the speed and context window for Qwen 3.8 27B on the RTX 4090. Things might break or regress with updates, I offer no guarantees, use this at your own risk.
 
-Co-developed with Gemini 3.7 Flash.
+Co-developed with **Gemini 3.8 Flash** as advisor and the **Oh-My-Pi** coding harness, running **Qwen3.8-27B** deployed with the ninfer-4090 engine.
 
 ## License & Credits
 
 * Apache License 2.0.
+* Derived from the original [ninfer-4090](https://github.com/UDPSendToFailed/ninfer-4090) repository by [UDPSendToFailed](https://github.com/UDPSendToFailed).
 * Derived from [Neroued/ninfer](https://github.com/Neroued/ninfer) and [Don-Chad/ninfer-3090](https://github.com/Don-Chad/ninfer-3090).
 * Specialized for native **sm_89** single-GPU execution on the **RTX 4090**.
