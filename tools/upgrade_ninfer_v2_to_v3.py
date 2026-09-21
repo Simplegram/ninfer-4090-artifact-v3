@@ -3,7 +3,7 @@
 This is the fork-local upgrade path: it validates the legacy directory, translates the
 object spellings to the v3 registry, preserves the fork's chat template / config metadata
 as-is (the upstream upgrade script replaces them with upstream-maintained ones), and
-copies the payload bytes unchanged.
+copies the payload bytes unchanged and pads the v3 payload to a 4096-byte sector boundary.
 
 Usage:
     python tools/upgrade_ninfer_v2_to_v3.py INPUT.ninfer OUTPUT.ninfer
@@ -149,6 +149,7 @@ def upgrade(input_path: Path, output_path: Path) -> Path:
                         "bytes": item["bytes"],
                     }
                 )
+        v3_payload_bytes = align_up(payload_bytes, PAYLOAD_ALIGNMENT)
         v3_directory = {
             "components": {"text": {"config": {}, "target": "text"}},
             "objects": v3_objects,
@@ -162,7 +163,7 @@ def upgrade(input_path: Path, output_path: Path) -> Path:
                 "source": f"{label}-artifact:{input_path.name}",
                 "upgraded": "tools/upgrade_ninfer_v2_to_v3.py",
             },
-            "files": [{"path": None, "payload_bytes": payload_bytes}],
+            "files": [{"path": None, "payload_bytes": v3_payload_bytes}],
         }
         encoded = json.dumps(v3_directory, ensure_ascii=False, separators=(",", ":")).encode("utf-8")
         v3_payload_offset = align_up(HEADER_BYTES + len(encoded), PAYLOAD_ALIGNMENT)
@@ -188,6 +189,7 @@ def upgrade(input_path: Path, output_path: Path) -> Path:
                     out.write(chunk)
                     copied += len(chunk)
                     remaining -= len(chunk)
+                out.write(b"\x00" * (v3_payload_bytes - payload_bytes))
                 out.flush()
                 os.fsync(out.fileno())
             os.replace(tmp_path, output_path)

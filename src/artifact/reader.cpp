@@ -414,6 +414,10 @@ struct Reader::Impl {
                                              "part length")) {
                 throw ArtifactError(*record.path + ": continuation length differs from directory");
             }
+            if (record.payload_bytes % kPayloadAlignment != 0) {
+                throw ArtifactError(*record.path +
+                                    ": part payload is not aligned to the direct I/O sector boundary");
+            }
             files[index] = std::move(input);
         }
         return *files[index];
@@ -477,6 +481,9 @@ struct Reader::Impl {
             checked_add(payload_start, directory.files[0].payload_bytes, "entry length");
         if (expected != entry_file->size()) {
             throw ArtifactError("entry length differs from the artifact directory");
+        }
+        if (directory.files[0].payload_bytes % kPayloadAlignment != 0) {
+            throw ArtifactError("entry payload is not aligned to the direct I/O sector boundary");
         }
         declared_file_bytes = checked_add(payload_start, directory.payload_bytes, "file bytes");
         declared_file_bytes = checked_add(

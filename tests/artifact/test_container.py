@@ -366,8 +366,10 @@ def test_upgrade_script_reframes_v2_as_v3(tmp_path):
         ]
         assert bytes(artifact.payload("direct/i32")) == b"\x01\x02\x03\x04"
         assert bytes(artifact.payload("frontend/tokenizer.json")) == b"{}"
-    # Payload bytes survive the reframe untouched.
+        payload_offset = artifact.payload_offset
+    # Payload bytes survive the reframe untouched. The v3 file pads its payload to a
+    # 4096-byte sector boundary, so anchor the comparison on the payload offset.
     legacy_bytes = legacy.read_bytes()
     upgraded_bytes = upgraded.read_bytes()
-    assert upgraded_bytes[-6:] == legacy_bytes[-6:]
+    assert upgraded_bytes[payload_offset : payload_offset + 6] == legacy_bytes[-6:]
     assert upgraded_bytes[:8] == MAGIC

@@ -297,7 +297,10 @@ def _v3_directory(
     text_config: dict[str, object] | None,
     provenance: dict[str, object] | None,
 ) -> dict[str, object]:
-    payload_bytes = objects[-1].offset + objects[-1].bytes if objects else 0
+    last = objects[-1] if objects else None
+    # The on-disk payload is padded to the 4096-byte direct-I/O sector boundary; the file
+    # record declares the padded size.
+    payload_bytes = align_up(last.offset + last.bytes, PAYLOAD_ALIGNMENT) if last else 0
     return {
         "components": {
             "text": {
@@ -638,7 +641,12 @@ class ArtifactWriter:
         if self._next != len(self.objects):
             missing = self.objects[self._next].name
             raise ArtifactError(f"artifact is missing payload {missing}")
-        self._file.truncate(self.payload_offset + self._cursor)
+        # Pad the payload tail to the 4096-byte direct-I/O sector boundary: O_DIRECT and
+        # FILE_FLAG_NO_BUFFERING reject a read of a partial trailing sector.
+        padded = align_up(self._cursor, PAYLOAD_ALIGNMENT)
+        if padded > self._cursor:
+            self._file.write(b"\x00" * (padded - self._cursor))
+        self._file.truncate(self.payload_offset + padded)
         self._file.flush()
         self._file.close()
         self._finished = True

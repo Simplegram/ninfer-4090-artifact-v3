@@ -149,12 +149,14 @@ int main() {
                 "retained resource payload differs from the artifact");
 
         const auto& stats = materialized.stats();
+        // Direct I/O reads each device span in 4096-byte aligned chunks (zero tail
+        // padding); the host resource is read through the file mapping.
         require(stats.tensor_count == 2 && stats.resource_count == 1 &&
                     stats.h2d_bytes == kTensor.size() + kSecondTensor.size() &&
                     stats.retained_resource_bytes == kResource.size() &&
                     stats.file_bytes == kResource.size() +
-                                            ninfer::artifact::Reader::direct_io_alignment +
-                                            kSecondTensor.size(),
+                        2 * static_cast<std::uint64_t>(
+                            ninfer::artifact::Reader::direct_io_alignment),
                 "materialization statistics are incomplete");
         require(materialized.device_arena().capacity() == plan.device_capacity_bytes &&
                     materialized.device_arena().used() == plan.device_capacity_bytes,

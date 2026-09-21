@@ -81,7 +81,9 @@ inline TemporaryArtifact write_fixture(const Json& directory, std::string_view s
         }
     }
 
-    std::vector<std::byte> file(payload_offset + payload_bytes, std::byte{0});
+    const auto padded_payload = align_up(payload_bytes, 4096);
+    // Pad the legacy payload to the direct-I/O sector boundary, like v3 files.
+    std::vector<std::byte> file(payload_offset + padded_payload, std::byte{0});
     for (std::size_t i = 0; i < magic.size(); ++i) { file[i] = std::byte{magic[i]}; }
     write_u64_le(file.data() + 8, json.size());
     std::memcpy(file.data() + 16, json.data(), json.size());
