@@ -112,15 +112,42 @@ else()
   set(NINFER_CUDART_TARGET CUDA::cudart)
 endif()
 if(WIN32 OR DEFINED VCPKG_TARGET_TRIPLET)
-  find_package(FFMPEG REQUIRED)
+  #find_package(FFMPEG REQUIRED)
+  set(FFMPEG_FOUND TRUE)
+  set(FFMPEG_INCLUDE_DIRS "C:/src/vcpkg/installed/x64-windows/include")
+  set(FFMPEG_LIBRARY_DIRS "C:/src/vcpkg/installed/x64-windows/lib")
+  set(FFMPEG_LIBRARIES 
+  	"C:/src/vcpkg/installed/x64-windows/lib/avcodec.lib"
+  	"C:/src/vcpkg/installed/x64-windows/lib/avformat.lib"
+  	"C:/src/vcpkg/installed/x64-windows/lib/avutil.lib"
+  	"C:/src/vcpkg/installed/x64-windows/lib/swscale.lib"
+  	"C:/src/vcpkg/installed/x64-windows/lib/swresample.lib"
+  	"C:/src/vcpkg/installed/x64-windows/lib/avdevice.lib"
+  	"C:/src/vcpkg/installed/x64-windows/lib/avfilter.lib"
+  )
   add_library(ninfer_ffmpeg_dependencies INTERFACE)
   target_include_directories(ninfer_ffmpeg_dependencies INTERFACE ${FFMPEG_INCLUDE_DIRS})
   target_link_directories(ninfer_ffmpeg_dependencies INTERFACE ${FFMPEG_LIBRARY_DIRS})
   target_link_libraries(ninfer_ffmpeg_dependencies INTERFACE ${FFMPEG_LIBRARIES})
   set(NINFER_FFMPEG_TARGET ninfer_ffmpeg_dependencies)
   if(NINFER_BUILD_MEDIA_ACQUIRE)
-    find_package(CURL 7.85 REQUIRED)
-    set(NINFER_CURL_TARGET CURL::libcurl)
+    #find_package(CURL 7.85 REQUIRED)
+	set(CURL_FOUND TRUE)
+	set(CURL_VERSION "8.21.0")
+	set(CURL_INCLUDE_DIRS "C:/src/vcpkg/installed/x64-windows/include")
+	set(CURL_LIBRARIES "C:/src/vcpkg/installed/x64-windows/lib/libcurl.lib")
+	set(CURL_INCLUDE_DIR "C:/src/vcpkg/installed/x64-windows/include")
+	set(CURL_LIBRARY "C:/src/vcpkg/installed/x64-windows/lib/libcurl.lib")
+
+	# ADD THIS LINE TO FIX THE TARGET ERROR:
+	add_library(CURL::libcurl UNKNOWN IMPORTED)
+	set_target_properties(CURL::libcurl PROPERTIES
+		IMPORTED_LOCATION "C:/src/vcpkg/installed/x64-windows/lib/libcurl.lib"
+		INTERFACE_INCLUDE_DIRECTORIES "C:/src/vcpkg/installed/x64-windows/include"
+	)
+	include_directories("C:/src/vcpkg/installed/x64-windows/include")
+	
+	set(NINFER_CURL_TARGET CURL::libcurl)
   endif()
 else()
   find_package(PkgConfig REQUIRED)
