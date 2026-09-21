@@ -1,22 +1,19 @@
 #pragma once
 
+#include "artifact/framing.h"
+#include "artifact/schema.h"
+
 #include <cstddef>
 #include <cstdint>
 #include <filesystem>
 #include <memory>
 #include <span>
-#include <stdexcept>
 #include <string>
 #include <string_view>
 #include <variant>
 #include <vector>
 
 namespace ninfer::artifact {
-
-class ArtifactError : public std::runtime_error {
-public:
-    using std::runtime_error::runtime_error;
-};
 
 enum class NumericFormat {
     BF16,
@@ -87,7 +84,8 @@ std::uint64_t object_offset(const ObjectDescriptor& object) noexcept;
 std::uint64_t object_bytes(const ObjectDescriptor& object) noexcept;
 
 struct PayloadSpan {
-    std::uint64_t absolute_offset;
+    std::size_t file_index          = 0;
+    std::uint64_t file_offset       = 0;
     std::span<const std::byte> data;
 };
 
@@ -98,6 +96,7 @@ struct ArtifactIdentity {
     bool operator==(const ArtifactIdentity&) const = default;
 };
 
+// Accepts v3 entries (with recorded continuation files) and legacy v1/v2 entries.
 class Reader {
 public:
     static constexpr std::size_t direct_io_alignment = 4096;
@@ -110,15 +109,19 @@ public:
     Reader(const Reader&)            = delete;
     Reader& operator=(const Reader&) = delete;
 
-    const ArtifactIdentity& identity() const noexcept;
-    const std::vector<ObjectDescriptor>& objects() const noexcept;
-    const ObjectDescriptor* find(std::string_view name) const noexcept;
+    [[nodiscard]] bool is_v3() const noexcept;
+    [[nodiscard]] const ArtifactIdentity& identity() const noexcept;
+    [[nodiscard]] const Directory& directory() const noexcept;
+    [[nodiscard]] const ArtifactId& artifact_id() const noexcept;
+    [[nodiscard]] const std::vector<ObjectDescriptor>& objects() const noexcept;
+    [[nodiscard]] const ObjectDescriptor* find(std::string_view name) const noexcept;
 
-    std::uint64_t file_bytes() const noexcept;
-    std::uint64_t payload_offset() const noexcept;
-    PayloadSpan payload(const ObjectDescriptor& object) const;
-    PayloadSpan payload(std::string_view name) const;
-    std::size_t read_direct(std::uint64_t absolute_offset, std::span<std::byte> destination) const;
+    [[nodiscard]] std::uint64_t file_bytes() const noexcept;
+    [[nodiscard]] std::uint64_t payload_offset() const noexcept;
+    [[nodiscard]] PayloadSpan payload(const ObjectDescriptor& object) const;
+    [[nodiscard]] PayloadSpan payload(std::string_view name) const;
+    [[nodiscard]] std::size_t read_direct(std::size_t file_index, std::uint64_t file_offset,
+                                          std::span<std::byte> destination) const;
 
 private:
     struct Impl;

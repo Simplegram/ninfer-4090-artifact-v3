@@ -1,6 +1,7 @@
 #pragma once
 
 #include "artifact/reader.h"
+#include "artifact/schema.h"
 
 #include <cstddef>
 #include <cstdint>
@@ -13,10 +14,6 @@ namespace ninfer::artifact {
 enum class TensorPlacement : std::uint8_t {
     Device,
     ValidateOnly,
-};
-
-struct ObjectHandle {
-    std::size_t index = 0;
 };
 
 struct DeviceMaterialization {

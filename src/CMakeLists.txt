@@ -48,6 +48,8 @@ endif()
 # Generic .ninfer framing, binding, and direct final materialization.
 add_library(ninfer_artifact STATIC
   artifact/reader.cpp
+  artifact/formats.cpp
+  artifact/schema.cpp
   artifact/storage_layouts.cpp
   artifact/binder.cpp
   artifact/materializer.cpp
