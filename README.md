@@ -1,6 +1,6 @@
-# NInfer-4090 Artifact-V3 Fork
+# NInfer-4090 v3 Artifact Implementation
 
-This repository is a fork of the original [ninfer-4090](https://github.com/UDPSendToFailed/ninfer-4090) repository by [UDPSendToFailed](https://github.com/UDPSendToFailed). It is co-developed with **Gemini 3.8 Flash** as advisor and the **Oh-My-Pi** coding harness, running **Qwen3.8-27B** deployed with the ninfer-4090 engine.
+This repository is a fork of the original [ninfer-4090](https://github.com/UDPSendToFailed/ninfer-4090) repository by [UDPSendToFailed](https://github.com/UDPSendToFailed). It is co-developed with **Gemini 3.8 Flash** as advisor and **Oh-My-Pi** coding harness, running **Qwen3.8-27B** deployed with the ninfer-4090 engine.
 
 ## What this fork is
 
@@ -10,8 +10,8 @@ The same single-GPU RTX 4090 (`sm_89`) Qwen3.8-27B inference engine as the origi
 
 | Branch | Contents |
 |---|---|
-| `feat/rtx-4090-sm89-native` (default) | Identical to the upstream parent — the v1.2.0 engine baseline |
-| `feat/artifact-v3` | Baseline + the fork work listed below (7 commits ahead) |
+| `feat/rtx-4090-sm89-native` | Identical to the upstream parent — the v1.2.0 engine baseline |
+| `feat/artifact-v3` (default, this branch) | Baseline + the fork work listed below (7 commits ahead) |
 
 ## What changed (vs the parent repo)
 
@@ -196,7 +196,7 @@ cmd /c "call ""C:\Program Files (x86)\Microsoft Visual Studio\2022\BuildTools\VC
 
 This is a fork of NInfer I am developing for fun to push the limits of the speed and context window for Qwen 3.8 27B on the RTX 4090. Things might break or regress with updates, I offer no guarantees, use this at your own risk.
 
-Co-developed with **Gemini 3.8 Flash** as advisor and the **Oh-My-Pi** coding harness, running **Qwen3.8-27B** deployed with the ninfer-4090 engine.
+Co-developed with **Gemini 3.8 Flash** as advisor and **Oh-My-Pi** coding harness, running **Qwen3.8-27B** deployed with the ninfer-4090 engine.
 
 ## License & Credits
 
