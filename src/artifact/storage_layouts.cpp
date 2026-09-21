@@ -1,31 +1,10 @@
 #include "artifact/reader.h"
 
-#include <limits>
-
 namespace ninfer::artifact {
 namespace {
 
 constexpr std::uint64_t kTensorAlignment = 256;
 constexpr std::uint64_t kKAlignment      = 128;
-
-std::uint64_t checked_add(std::uint64_t a, std::uint64_t b, std::string_view label) {
-    if (b > std::numeric_limits<std::uint64_t>::max() - a) {
-        throw ArtifactError(std::string(label) + " overflows u64");
-    }
-    return a + b;
-}
-
-std::uint64_t checked_mul(std::uint64_t a, std::uint64_t b, std::string_view label) {
-    if (a != 0 && b > std::numeric_limits<std::uint64_t>::max() / a) {
-        throw ArtifactError(std::string(label) + " overflows u64");
-    }
-    return a * b;
-}
-
-std::uint64_t align_up(std::uint64_t value, std::uint64_t alignment, std::string_view label) {
-    const auto biased = checked_add(value, alignment - 1, label);
-    return biased / alignment * alignment;
-}
 
 struct QuantGeometry {
     std::uint64_t group_size;
