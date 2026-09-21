@@ -288,15 +288,19 @@ public:
             reinterpret_cast<std::uintptr_t>(destination.data()) % alignment != 0) {
             throw ArtifactError("direct artifact read is not alignment compliant");
         }
+        if (absolute_offset > size_ || destination.size() > size_ - absolute_offset) {
+            throw ArtifactError("direct artifact read extends past end of file");
+        }
+
 #ifdef _WIN32
         std::size_t total = 0;
         while (total < destination.size()) {
             const std::size_t amount =
                 std::min<std::size_t>(destination.size() - total, 4 * 1024 * 1024);
+            const std::uint64_t at = absolute_offset + total;
             OVERLAPPED operation {};
-            operation.Offset =
-                static_cast<DWORD>(std::min<std::uint64_t>(absolute_offset + total, 0xFFFFFFFF));
-            operation.OffsetHigh = static_cast<DWORD>((absolute_offset + total) >> 32);
+            operation.Offset     = static_cast<DWORD>(at);
+            operation.OffsetHigh = static_cast<DWORD>(at >> 32);
             DWORD bytes = 0;
             const BOOL started = ::ReadFile(direct_file_, destination.data() + total, amount,
                                             &bytes, &operation);
