@@ -113,17 +113,19 @@ else()
 endif()
 if(WIN32 OR DEFINED VCPKG_TARGET_TRIPLET)
   #find_package(FFMPEG REQUIRED)
+  set(FFMPEG_ROOT "C:\Users\Test\Downloads\ffmpeg-master-latest-win64-gpl-shared")
+
   set(FFMPEG_FOUND TRUE)
-  set(FFMPEG_INCLUDE_DIRS "C:/src/vcpkg/installed/x64-windows/include")
-  set(FFMPEG_LIBRARY_DIRS "C:/src/vcpkg/installed/x64-windows/lib")
+  set(FFMPEG_INCLUDE_DIRS "${FFMPEG_ROOT}/include")
+  set(FFMPEG_LIBRARY_DIRS "${FFMPEG_ROOT}/lib")
   set(FFMPEG_LIBRARIES 
-  	"C:/src/vcpkg/installed/x64-windows/lib/avcodec.lib"
-  	"C:/src/vcpkg/installed/x64-windows/lib/avformat.lib"
-  	"C:/src/vcpkg/installed/x64-windows/lib/avutil.lib"
-  	"C:/src/vcpkg/installed/x64-windows/lib/swscale.lib"
-  	"C:/src/vcpkg/installed/x64-windows/lib/swresample.lib"
-  	"C:/src/vcpkg/installed/x64-windows/lib/avdevice.lib"
-  	"C:/src/vcpkg/installed/x64-windows/lib/avfilter.lib"
+      "${FFMPEG_ROOT}/lib/avcodec.lib"
+      "${FFMPEG_ROOT}/lib/avformat.lib"
+      "${FFMPEG_ROOT}/lib/avutil.lib"
+      "${FFMPEG_ROOT}/lib/swscale.lib"
+      "${FFMPEG_ROOT}/lib/swresample.lib"
+      "${FFMPEG_ROOT}/lib/avdevice.lib"
+      "${FFMPEG_ROOT}/lib/avfilter.lib"
   )
   add_library(ninfer_ffmpeg_dependencies INTERFACE)
   target_include_directories(ninfer_ffmpeg_dependencies INTERFACE ${FFMPEG_INCLUDE_DIRS})
