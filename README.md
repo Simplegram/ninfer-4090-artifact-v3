@@ -30,7 +30,10 @@ The same single-GPU RTX 4090 (`sm_89`) Qwen3.8-27B inference engine as the origi
 
 ## Building (fork-specific notes)
 
-Identical to the standard instructions further down: Windows 11, Visual Studio 2022, CUDA 13.3, CMake + Ninja into `build-ninja/`. The FFMPEG/CURL `find_package` bypass is baked into `CMakeLists.txt` for a vcpkg root at `C:/src/vcpkg` — if your vcpkg root is elsewhere, edit that block (or restore `find_package` with a working vcpkg toolchain file).
+Identical to the standard instructions further down: Windows 11, Visual Studio 2022, CUDA 13.3, CMake + Ninja into `build-ninja/`. Before the first configure, the `find_package` bypass block in `CMakeLists.txt` pins two external dependencies that you place yourself:
+
+- **FFmpeg**: download the latest Windows build from [BtbN/FFmpeg-Builds](https://github.com/BtbN/FFmpeg-Builds/releases) (the repo points at the `ffmpeg-master-latest-win64-gpl-shared` variant), extract it, and set `FFMPEG_ROOT` in `CMakeLists.txt` to the extracted folder. If you use the `-shared` variant, its `bin/*.dll` must be on `PATH` (or next to the executables) at runtime.
+- **cURL**: still taken from a local vcpkg install at `C:/src/vcpkg` (`x64-windows`) — if your vcpkg root is elsewhere, edit that block (or restore `find_package` with a working vcpkg toolchain file).
 
 ## Using (fork-specific notes)
 
